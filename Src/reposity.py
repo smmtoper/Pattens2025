@@ -32,6 +32,11 @@ class reposity:
     def storage_key():
         return "storage_key"
         
+    """
+    Ключ для транзакций
+    """    
+    def transaction_key():
+        return "transaction_key"    
     
 
     """

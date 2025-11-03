@@ -12,6 +12,8 @@ from Src.Dtos.range_dto import range_dto
 from Src.Dtos.category_dto import category_dto
 from Src.Dtos.storage_dto import storage_dto
 from Src.Models.storage_model import storage_model
+from Src.Models.transaction_model import transaction_model
+from Src.Dtos.transaction_dto import transaction_dto
 
 class start_service:
     # Репозиторий
@@ -120,6 +122,20 @@ class start_service:
             item = storage_model.from_dto(dto, self.__cache )
             self.__save_item( reposity.storage_key(), dto, item )
 
+        return True    
+
+    # Загрузить тестовые транзакции
+    def __convert_transactions(self, data:list) -> bool:
+        validator.validate(data, list)
+        if len(data) == 0:
+            return False
+        
+        for transaction in data:
+            dto = transaction_dto().create(transaction)
+            item = transaction_model.from_dto(dto, self.__cache )
+            self.__save_item( reposity.transaction_key(), dto, item )
+
+        return True    
 
     # Загрузить номенклатуру
     def __convert_nomenclatures(   self, data: dict) -> bool:
@@ -189,6 +205,9 @@ class start_service:
     # Обработать полученный словарь    
     def convert(self, data: dict) -> bool:
         validator.validate(data, dict)
+        loaded_references = True
+        loaded_receipt = True
+        loaded_transactions = True
 
         # Обработать справочники
         if "default_refenences" in data.keys():
@@ -198,9 +217,14 @@ class start_service:
         # Обработать рецепт
         if "default_receipt" in data.keys():
                 default_receipt = data["default_receipt"]
-                loaded_receipt = self.__convert_receipt(default_receipt)                
+                loaded_receipt = self.__convert_receipt(default_receipt)  
 
-        return loaded_references and loaded_receipt
+        # Загрузить транзакции
+        if "default_transactions" in data.keys():
+                default_transactions = data["default_transactions"]
+                loaded_transactions = self.__convert_transactions(default_transactions)             
+
+        return loaded_references and loaded_receipt and loaded_transactions
 
     """
     Стартовый набор данных
@@ -216,7 +240,6 @@ class start_service:
         self.file_name = "settings.json"
         result = self.load()
         if result == False:
-            raise operation_exception("Невозможно сформировать стартовый набор данных!") 
+            raise operation_exception(f"Невозможно сформировать стартовый набор данных!\nОписание: {self.error_message}") 
         
-
 
